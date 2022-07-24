@@ -3,17 +3,31 @@ package main
 import (
 	"fmt"
 	"net"
+	"sync"
 )
 
-func main() {
+func ScanPort(port int, wg *sync.WaitGroup) {
+	defer wg.Done()
 	IP := "scanme.nmap.org"
-	//	Port := "80"
+
+	address := fmt.Sprintf(IP+":%d", port)
+	connection, err := net.Dial("tcp", address)
+
+	if err != nil {
+		return
+		//		fmt.Printf("[+] Connection established..PORT %v %s\n", port, connection.RemoteAddr().String())
+	}
+	fmt.Printf("%d is open\n", port)
+	connection.Close()
+}
+
+func main() {
+	var wg sync.WaitGroup
 
 	for i := 1; i < 100; i++ {
-		address := fmt.Sprintf(IP+":%d", i)
-		connection, err := net.Dial("tcp", address)
-		if err == nil {
-			fmt.Printf("[+] Connection established..PORT %v %s\n", i, connection.RemoteAddr().String())
-		}
+		wg.Add(1)
+		go ScanPort(i, &wg)
 	}
+
+	wg.Wait()
 }
